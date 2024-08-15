@@ -51,15 +51,28 @@ export const createOnDemandAuthorization = async () => {
   }
 };
 
-export const createDwollaCustomer = async (
-  newCustomer: NewDwollaCustomerParams
-) => {
+export const createDwollaCustomer = async (newCustomer: NewDwollaCustomerParams): Promise<string | undefined> => {
   try {
-    return await dwollaClient
-      .post("customers", newCustomer)
-      .then((res) => res.headers.get("location"));
-  } catch (err) {
+    // Pre-validate required fields
+    if (!newCustomer.firstName || !newCustomer.lastName || !newCustomer.state) {
+      throw new Error("First name, last name, and state are required.");
+    }
+
+    const res = await dwollaClient.post("customers", newCustomer);
+    return res.headers.get("location") || undefined;
+  } catch (err: any) {
+    // Check if the error is a validation error from Dwolla
+    if (err.body && err.body._embedded && err.body._embedded.errors) {
+      const validationErrors = err.body._embedded.errors.map(
+        (error: { message: string; path: string }) =>
+          `${error.path}: ${error.message}`
+      );
+      console.error("Validation errors occurred while creating Dwolla customer:", validationErrors.join("; "));
+      throw new Error(`Validation failed: ${validationErrors.join("; ")}`);
+    }
+
     console.error("Creating a Dwolla Customer Failed: ", err);
+    throw new Error("Error creating Dwolla customer");
   }
 };
 

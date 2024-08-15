@@ -15,8 +15,8 @@ export default function RootLayout({
             alt="Auth image"
             width={500}
             height={500}
-            className="rounded-l-xl"
-            style={{ height: 'auto', width: '100%' }} // Maintain aspect ratio
+            className="rounded-l-xl object-contain"
+            priority
           />
         </div>
       </div>
